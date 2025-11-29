@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>深渊猎手 - Demo</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="game-container">
+        <!-- 游戏画面将在这里渲染 -->
+        <canvas id="game-canvas"></canvas>
+        
+        <!-- UI层 -->
+        <div id="ui-layer">
+            <!-- 启动界面 -->
+            <div id="boot-screen" class="screen active">
+                <div class="title-container">
+                    <h1 class="game-title">深渊猎手</h1>
+                    <p class="game-subtitle">ABYSS HUNTER</p>
+                </div>
+                <button id="btn-start" class="btn btn-primary">开始游戏</button>
+                <p class="version">Demo v0.1</p>
+            </div>
+
+            <!-- 公会界面 -->
+            <div id="guild-screen" class="screen">
+                <div class="guild-header">
+                    <div class="resources">
+                        <span class="gold">💰 <span id="gold-amount">1000</span></span>
+                        <span class="soul">💎 <span id="soul-amount">50</span></span>
+                    </div>
+                    <button id="btn-settings" class="btn btn-icon">⚙️</button>
+                </div>
+                
+                <div class="guild-main">
+                    <div class="guild-facilities">
+                        <div class="facility" data-facility="storage">
+                            <span class="facility-icon">📦</span>
+                            <span class="facility-name">仓库</span>
+                        </div>
+                        <div class="facility" data-facility="shop">
+                            <span class="facility-icon">🏪</span>
+                            <span class="facility-name">商店</span>
+                        </div>
+                        <div class="facility" data-facility="medical">
+                            <span class="facility-icon">🏥</span>
+                            <span class="facility-name">医疗室</span>
+                        </div>
+                    </div>
+                    
+                    <div class="guild-center">
+                        <h2>公会大厅</h2>
+                        <button id="btn-prepare" class="btn btn-large btn-primary">出击准备</button>
+                    </div>
+                </div>
+                
+                <div class="hunter-bar">
+                    <h3>我的猎手</h3>
+                    <div id="hunter-list" class="hunter-list">
+                        <!-- 猎手卡片将在这里动态生成 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 准备界面 -->
+            <div id="prep-screen" class="screen">
+                <div class="prep-header">
+                    <button id="btn-back-guild" class="btn btn-back">← 返回公会</button>
+                    <h2>出击准备</h2>
+                </div>
+                
+                <div class="prep-content">
+                    <!-- 步骤1: 选择猎手 -->
+                    <div id="prep-step-hunter" class="prep-step active">
+                        <h3>第一步：选择猎手</h3>
+                        <div id="prep-hunter-list" class="hunter-select-list">
+                            <!-- 动态生成 -->
+                        </div>
+                    </div>
+                    
+                    <!-- 步骤2: 选择区域 -->
+                    <div id="prep-step-area" class="prep-step">
+                        <h3>第二步：选择区域</h3>
+                        <div id="area-list" class="area-list">
+                            <!-- 动态生成 -->
+                        </div>
+                    </div>
+                    
+                    <!-- 步骤3: 确认 -->
+                    <div id="prep-step-confirm" class="prep-step">
+                        <h3>确认出击</h3>
+                        <div class="confirm-info">
+                            <p>猎手：<span id="confirm-hunter">-</span></p>
+                            <p>区域：<span id="confirm-area">-</span></p>
+                            <p class="warning">⚠️ 死亡将丢失所有携带物品！</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="prep-nav">
+                    <button id="btn-prep-prev" class="btn" disabled>上一步</button>
+                    <button id="btn-prep-next" class="btn btn-primary">下一步</button>
+                </div>
+            </div>
+
+            <!-- 加载界面 -->
+            <div id="loading-screen" class="screen">
+                <div class="loading-content">
+                    <h2 id="loading-area-name">正在进入...</h2>
+                    <div class="loading-bar">
+                        <div id="loading-progress" class="loading-progress"></div>
+                    </div>
+                    <p class="loading-tip" id="loading-tip">提示：注意侵蚀度，及时撤离！</p>
+                </div>
+            </div>
+
+            <!-- 探索界面HUD -->
+            <div id="explore-hud" class="screen">
+                <div class="hud-top-left">
+                    <div class="stat-bar hp-bar">
+                        <span class="stat-label">HP</span>
+                        <div class="bar-bg">
+                            <div id="hp-bar-fill" class="bar-fill hp"></div>
+                        </div>
+                        <span id="hp-text" class="stat-value">100/100</span>
+                    </div>
+                    <div class="stat-bar mp-bar">
+                        <span class="stat-label">MP</span>
+                        <div class="bar-bg">
+                            <div id="mp-bar-fill" class="bar-fill mp"></div>
+                        </div>
+                        <span id="mp-text" class="stat-value">50/50</span>
+                    </div>
+                    <div class="stat-bar corrosion-bar">
+                        <span class="stat-label">侵蚀</span>
+                        <div class="bar-bg">
+                            <div id="corrosion-bar-fill" class="bar-fill corrosion"></div>
+                        </div>
+                        <span id="corrosion-text" class="stat-value">0%</span>
+                    </div>
+                </div>
+                
+                <div class="hud-top-right">
+                    <div id="minimap" class="minimap">
+                        <canvas id="minimap-canvas"></canvas>
+                    </div>
+                    <p id="area-name-display" class="area-name">遗忘墓穴</p>
+                </div>
+                
+                <div class="hud-bottom">
+                    <div class="skill-bar">
+                        <div class="skill-slot" data-skill="1">
+                            <span class="skill-key">Q</span>
+                            <div id="skill-1" class="skill-icon">⚔️</div>
+                        </div>
+                        <div class="skill-slot" data-skill="2">
+                            <span class="skill-key">W</span>
+                            <div id="skill-2" class="skill-icon">🛡️</div>
+                        </div>
+                        <div class="skill-slot" data-skill="3">
+                            <span class="skill-key">E</span>
+                            <div id="skill-3" class="skill-icon">💨</div>
+                        </div>
+                        <div class="skill-slot" data-skill="4">
+                            <span class="skill-key">R</span>
+                            <div id="skill-4" class="skill-icon">🔥</div>
+                        </div>
+                    </div>
+                    <div class="item-bar">
+                        <div class="item-slot" data-item="1">
+                            <span class="item-key">1</span>
+                            <div id="item-1" class="item-icon">🧪</div>
+                            <span id="item-1-count" class="item-count">3</span>
+                        </div>
+                        <div class="item-slot" data-item="2">
+                            <span class="item-key">2</span>
+                            <div id="item-2" class="item-icon">🧪</div>
+                            <span id="item-2-count" class="item-count">2</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="hud-controls">
+                    <p>WASD 移动 | 鼠标左键 攻击 | 空格 闪避 | Tab 背包 | ESC 暂停</p>
+                </div>
+                
+                <!-- 撤离提示 -->
+                <div id="evacuate-prompt" class="evacuate-prompt hidden">
+                    <p>按 F 开始撤离</p>
+                </div>
+                
+                <!-- 撤离进度 -->
+                <div id="evacuate-progress" class="evacuate-progress hidden">
+                    <p>撤离中...</p>
+                    <div class="evacuate-bar">
+                        <div id="evacuate-bar-fill" class="evacuate-bar-fill"></div>
+                    </div>
+                    <p id="evacuate-time">5.0s</p>
+                </div>
+            </div>
+
+            <!-- 背包界面 -->
+            <div id="inventory-modal" class="modal hidden">
+                <div class="modal-content inventory-content">
+                    <div class="modal-header">
+                        <h2>背包</h2>
+                        <button id="btn-close-inventory" class="btn btn-close">×</button>
+                    </div>
+                    <div class="inventory-grid" id="inventory-grid">
+                        <!-- 动态生成格子 -->
+                    </div>
+                    <div class="inventory-info">
+                        <p>容量：<span id="inventory-count">0</span>/20</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 暂停界面 -->
+            <div id="pause-modal" class="modal hidden">
+                <div class="modal-content pause-content">
+                    <h2>游戏暂停</h2>
+                    <button id="btn-resume" class="btn btn-primary">继续游戏</button>
+                    <button id="btn-quit-explore" class="btn btn-danger">放弃探索</button>
+                </div>
+            </div>
+
+            <!-- 结算界面 -->
+            <div id="settle-screen" class="screen">
+                <div id="settle-content" class="settle-content">
+                    <!-- 动态生成 -->
+                </div>
+            </div>
+
+            <!-- 商店界面 -->
+            <div id="shop-modal" class="modal hidden">
+                <div class="modal-content shop-content">
+                    <div class="modal-header">
+                        <h2>商店</h2>
+                        <button id="btn-close-shop" class="btn btn-close">×</button>
+                    </div>
+                    <div class="shop-items" id="shop-items">
+                        <!-- 动态生成 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 消息提示 -->
+            <div id="message-container" class="message-container"></div>
+        </div>
+    </div>
+
+    <script src="js/game.js" type="module"></script>
+</body>
+</html>
